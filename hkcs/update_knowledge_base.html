@@ -329,9 +329,55 @@
         // If already busy, ignore
         if (btn.getAttribute("aria-busy") === "true") return;
 
-        const API_ENDPOINT = "https://hkcschatdev.4dstaging.com/v1/import_git";
+        // const API_ENDPOINT = "https://hkcschatdev.4dstaging.com/v1/import_git";
 
+        // try {
+        //   const resp = await fetch(API_ENDPOINT, {
+        //     method: "POST",
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //       // add 'Authorization' or other headers here if required
+        //     },
+        //     body: JSON.stringify(body),
+        //     // credentials: 'include' // enable if you need cookies
+        //   });
+
+        //   // Try to parse response as JSON if present
+        //   let text = await resp.text();
+        //   let parsed;
+        //   try {
+        //     parsed = text ? JSON.parse(text) : null;
+        //   } catch (err) {
+        //     parsed = text;
+        //   }
+
+        //   if (!resp.ok) {
+        //     statusEl.textContent = `Error: ${resp.status} ${
+        //       resp.statusText
+        //     } — ${
+        //       typeof parsed === "string" ? parsed : JSON.stringify(parsed)
+        //     }`;
+        //   } else {
+        //     statusEl.textContent =
+        //       "Success: " +
+        //       (parsed ? JSON.stringify(parsed) : `Status ${resp.status}`);
+        //   }
+        // } catch (err) {
+        //   // network or CORS error
+        //   statusEl.textContent = "Request failed: " + err.message;
+        // } finally {
+        //   btn.disabled = false;
+        //   spinner.style.display = "none";
+        // }
+
+        // In a real page you'd call your API, e.g.:
         try {
+          btn.setAttribute("aria-busy", "true");
+          const API_ENDPOINT =
+            "https://hkcschatdev.4dstaging.com/v1/import_git";
+
+          body = {};
+
           const resp = await fetch(API_ENDPOINT, {
             method: "POST",
             headers: {
@@ -345,37 +391,10 @@
           // Try to parse response as JSON if present
           let text = await resp.text();
           let parsed;
-          try {
-            parsed = text ? JSON.parse(text) : null;
-          } catch (err) {
-            parsed = text;
-          }
-
-          if (!resp.ok) {
-            statusEl.textContent = `Error: ${resp.status} ${
-              resp.statusText
-            } — ${
-              typeof parsed === "string" ? parsed : JSON.stringify(parsed)
-            }`;
-          } else {
-            statusEl.textContent =
-              "Success: " +
-              (parsed ? JSON.stringify(parsed) : `Status ${resp.status}`);
-          }
-        } catch (err) {
-          // network or CORS error
-          statusEl.textContent = "Request failed: " + err.message;
+          // handle server response, update status, poll job id, etc.
         } finally {
-          btn.disabled = false;
-          spinner.style.display = "none";
+          btn.setAttribute("aria-busy", "false");
         }
-
-        // In a real page you'd call your API, e.g.:
-        // try {
-        //   btn.setAttribute('aria-busy','true');
-        //   const resp = await fetch('/api/knowledge/update', { method: 'POST' });
-        //   // handle server response, update status, poll job id, etc.
-        // } finally { btn.setAttribute('aria-busy','false') }
 
         // For this demo, simulate the update:
         simulateUpdate();
