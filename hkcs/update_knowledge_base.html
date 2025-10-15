@@ -390,6 +390,26 @@
 
           // Try to parse response as JSON if present
           let text = await resp.text();
+
+          const API_ENDPOINT2 =
+            "https://hkcschatdev.4dstaging.com/v1/import";
+          const body2 = {
+                "import_path": "E:\\workspace\\RAG_data\\hkcs_knowledge_base",
+                "save_path": "E:\\workspace\\RAG_data\\20241108_hkcs_docs\\db"
+            };
+
+          const resp2 = await fetch(API_ENDPOINT2, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              // add 'Authorization' or other headers here if required
+            },
+            body: JSON.stringify(body2),
+            // credentials: 'include' // enable if you need cookies
+          });
+
+          // Try to parse response as JSON if present
+          let text2 = await resp2.text();
           let parsed;
           // handle server response, update status, poll job id, etc.
         } finally {
