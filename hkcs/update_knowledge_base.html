@@ -286,24 +286,39 @@
         btn.innerHTML =
           '<span class="spinner" aria-hidden="true"></span><span class="label">Updating…</span>';
         status.textContent = "Connecting to sources…";
-        eta.textContent = "estimating…";
+        eta.textContent = "5 minutes remaining…";
 
         try {
           await wait(800);
-          status.textContent = "Fetching documents (0/3)…";
-          eta.textContent = "about 2m";
-          await wait(1000);
+          status.textContent = "Fetching documents (0/5)…";
+          eta.textContent = "5 minutes remaining…";
+          await wait(1000 * 60);
 
-          status.textContent = "Indexing documents (1/3)…";
+          status.textContent = "Indexing documents (1/5)…";
           itemsIndexed.textContent = "Items indexed: 1";
-          await wait(900);
+          eta.textContent = "4 minutes remaining…";
 
-          status.textContent = "Indexing documents (2/3)…";
+          await wait(1000 * 60);
+          status.textContent = "Indexing documents (2/5)…";
           itemsIndexed.textContent = "Items indexed: 2";
-          await wait(1000);
+          eta.textContent = "3 minutes remaining…";
 
-          status.textContent = "Finalizing (3/3)…";
+          await wait(1000 * 60);
+
+          status.textContent = "Indexing documents (3/5)…";
           itemsIndexed.textContent = "Items indexed: 3";
+          eta.textContent = "2 minutes remaining…";
+
+          await wait(1000 * 60);
+
+          status.textContent = "Indexing documents (4/5)…";
+          itemsIndexed.textContent = "Items indexed: 4";
+          eta.textContent = "1 minutes remaining…";
+
+          await wait(1000 * 60);
+
+          status.textContent = "Finalizing (5/5)…";
+          itemsIndexed.textContent = "Items indexed: 5";
           await wait(900);
 
           status.textContent = "Update complete ✔";
@@ -373,10 +388,10 @@
         // In a real page you'd call your API, e.g.:
         try {
           btn.setAttribute("aria-busy", "true");
-            btn.innerHTML =
-          '<span class="spinner" aria-hidden="true"></span><span class="label">Updating…</span>';
-        status.textContent = "Connecting to sources…";
-        eta.textContent = "3 minutes remaining…";
+          btn.innerHTML =
+            '<span class="spinner" aria-hidden="true"></span><span class="label">Updating…</span>';
+          status.textContent = "Connecting to sources…";
+          eta.textContent = "estimating…";
           const API_ENDPOINT =
             "https://hkcschatdev.4dstaging.com/v1/import_git";
 
@@ -401,7 +416,7 @@
             save_path: "E:\\workspace\\RAG_data\\20241108_hkcs_docs\\db\\ALL",
           };
 
-          const resp2 = await fetch(API_ENDPOINT2, {
+          fetch(API_ENDPOINT2, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -412,7 +427,7 @@
           });
 
           // Try to parse response as JSON if present
-          let text2 = await resp2.text();
+          //let text2 = await resp2.text();
           let parsed;
           // handle server response, update status, poll job id, etc.
         } finally {
