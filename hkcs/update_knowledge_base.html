@@ -373,6 +373,10 @@
         // In a real page you'd call your API, e.g.:
         try {
           btn.setAttribute("aria-busy", "true");
+            btn.innerHTML =
+          '<span class="spinner" aria-hidden="true"></span><span class="label">Updating…</span>';
+        status.textContent = "Connecting to sources…";
+        eta.textContent = "3 minutes remaining…";
           const API_ENDPOINT =
             "https://hkcschatdev.4dstaging.com/v1/import_git";
 
@@ -391,12 +395,11 @@
           // Try to parse response as JSON if present
           let text = await resp.text();
 
-          const API_ENDPOINT2 =
-            "https://hkcschatdev.4dstaging.com/v1/import";
+          const API_ENDPOINT2 = "https://hkcschatdev.4dstaging.com/v1/import";
           const body2 = {
-                "import_path": "E:\\workspace\\RAG_data\\hkcs_knowledge_base",
-                "save_path": "E:\\workspace\\RAG_data\\20241108_hkcs_docs\\db"
-            };
+            import_path: "E:\\workspace\\RAG_data\\hkcs_knowledge_base",
+            save_path: "E:\\workspace\\RAG_data\\20241108_hkcs_docs\\db\\ALL",
+          };
 
           const resp2 = await fetch(API_ENDPOINT2, {
             method: "POST",
