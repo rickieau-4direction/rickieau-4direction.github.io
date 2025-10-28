@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Document Reader — DOCX & PDF</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#6ee7b7;
+      --accent-2:#60a5fa;
+      --glass: rgba(255,255,255,0.04);
+      --radius:12px;
+      --glass-2: rgba(255,255,255,0.03);
+      --max-width:1100px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      color-scheme: dark;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #071029 0%, #081225 50%, #06121b 100%);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color:#e6eef8;
+    }
+
+    .wrap{
+      max-width:var(--max-width);
+      margin:32px auto;
+      padding:28px;
+      box-sizing:border-box;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      margin-bottom:20px;
+    }
+    .logo{
+      width:56px;height:56px;border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:grid;place-items:center;font-weight:700;color:#04203a;
+      box-shadow:0 6px 30px rgba(3,10,25,0.6), inset 0 -6px 18px rgba(255,255,255,0.06);
+      font-family:var(--mono);
+    }
+    h1{ font-size:1.375rem; margin:0; letter-spacing:-0.2px; }
+    p.lead{ margin:0; color:var(--muted); font-size:0.95rem; margin-top:6px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .card{
+      background: linear-gradient(180deg,var(--card), rgba(6,12,20,0.6));
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: 0 10px 30px rgba(2,6,12,0.6);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .uploader {
+      display:flex;flex-direction:column;gap:12px;
+    }
+
+    .drop {
+      border-radius:10px;
+      padding:14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border: 1px dashed rgba(255,255,255,0.04);
+      transition: all .18s ease;
+      display:flex;flex-direction:column;gap:10px;
+      align-items:center;justify-content:center;
+      min-height:160px;
+      text-align:center;
+    }
+    .drop.dragover{
+      border-color: rgba(96,165,250,0.85);
+      box-shadow: 0 6px 30px rgba(96,165,250,0.06), inset 0 1px 0 rgba(255,255,255,0.02);
+      transform: translateY(-3px);
+    }
+
+    .drop strong { display:block; font-size:1.05rem; }
+    .drop .muted { color:var(--muted); font-size:0.92rem; }
+
+    .controls {
+      display:flex;gap:10px;align-items:center;
+      margin-top:6px;
+      flex-wrap:wrap;
+    }
+
+    input[type=file]{
+      display:none;
+    }
+
+    .btn {
+      display:inline-flex;gap:8px;align-items:center;cursor:pointer;
+      padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      color:var(--accent); font-weight:600;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    .btn.primary{
+      background: linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#04203a; border: none; box-shadow: 0 10px 30px rgba(96,165,250,0.08);
+    }
+    .btn:hover{ transform: translateY(-3px); }
+    .btn.secondary{ color:var(--muted); }
+
+    .meta { color:var(--muted); font-size:0.86rem; }
+
+    .preview {
+      height:68vh;
+      min-height:300px;
+      overflow:auto;
+      padding:12px;
+      border-radius:10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.007));
+      border: 1px solid rgba(255,255,255,0.02);
+      font-family: var(--mono);
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:#dbeafe;
+      font-size:0.95rem;
+    }
+
+    .empty {
+      color:var(--muted);
+      display:grid;place-items:center;height:100%;
+      font-size:0.95rem;
+    }
+
+    footer {
+      margin-top:18px;color:var(--muted);font-size:0.85rem;display:flex;justify-content:space-between;gap:12px;align-items:center;
+    }
+
+    .badge {
+      background:var(--glass-2); padding:6px 8px;border-radius:8px;color:var(--muted);font-size:0.82rem;border:1px solid rgba(255,255,255,0.02);
+    }
+
+    .small { font-size:0.82rem; color:var(--muted); }
+
+    @media (max-width:1000px){
+      .grid { grid-template-columns: 1fr; }
+      .preview { height:48vh; }
+    }
+
+    /* subtle scrollbar */
+    .preview::-webkit-scrollbar{height:8px;width:10px}
+    .preview::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">DR</div>
+      <div>
+        <h1>Document Reader</h1>
+        <p class="lead">Drop a .docx or .pdf file, or browse. Text is extracted locally and sent to a server; response is displayed.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Left: uploader controls -->
+      <div class="card">
+        <div class="uploader">
+          <div id="drop" class="drop" tabindex="0">
+            <div>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M12 3v10" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 7l4-4 4 4" stroke="url(#g)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#60a5fa"/></linearGradient></defs>
+              </svg>
+            </div>
+            <strong>Drop your .docx or .pdf here</strong>
+            <div class="muted">or click <span style="color:var(--accent);font-weight:700">Browse</span> to choose a file</div>
+            <div class="meta" style="margin-top:8px">Processing happens locally — files are not uploaded. After extraction the text will be POSTed to the server.</div>
+          </div>
+
+          <div class="controls" style="margin-top:8px;">
+            <label class="btn" for="fileInput" title="Choose a file from your computer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.9"><path d="M4 7h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+              Browse
+            </label>
+
+            <button id="sendBtn" class="btn primary" title="Extract text, send to server and show response">Send</button>
+
+            <button id="clearBtn" class="btn secondary" title="Clear preview">Clear</button>
+
+            <div style="margin-left:auto" class="badge" id="fileInfo">No file</div>
+          </div>
+
+          <input id="fileInput" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" />
+
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
+            <span class="small">Tip: For large PDFs the extraction may take a few seconds.</span>
+          </div>
+        </div>
+
+        <footer>
+          <div class="small">Using Mammoth (.docx) & pdf.js (PDF) — local only for extraction</div>
+          <div class="small">Open console to see full output</div>
+        </footer>
+      </div>
+
+      <!-- Right: preview & response -->
+      <div class="card" aria-live="polite">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="display:flex;flex-direction:column">
+            <div style="font-weight:700">Extracted text preview</div>
+            <div style="color:var(--muted);font-size:0.86rem;margin-top:6px">Scrollable preview — full text is printed to the browser console as well.</div>
+          </div>
+          <div style="color:var(--muted);font-size:0.86rem">Words: <span id="wordCount">0</span></div>
+        </div>
+
+        <div id="preview" class="preview">
+          <div class="empty">No document loaded. Select or drop a file to extract text.</div>
+        </div>
+
+        <hr style="border:none;height:1px;background:rgba(255,255,255,0.02);margin:16px 0;border-radius:2px" />
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-weight:700">Server response</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button id="downloadBtn" class="btn" title="Download server response as .docx" disabled>
+                Download Response
+              </button>
+            </div>
+          </div>
+          <div id="responseBox" class="preview" style="min-height:120px;">
+            <div class="empty">No response yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="https://unpkg.com/pdfjs-dist/build/pdf.min.js"></script>
+  <!-- docx library to generate .docx files client-side -->
+  <script src="https://unpkg.com/docx@7.4.1/build/index.umd.js"></script>
+
+  <script>
+    // Configure pdf.js worker from unpkg CDN
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist/build/pdf.worker.min.js";
+    }
+
+    const drop = document.getElementById('drop');
+    const fileInput = document.getElementById('fileInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const preview = document.getElementById('preview');
+    const fileInfo = document.getElementById('fileInfo');
+    const wordCountEl = document.getElementById('wordCount');
+    const responseBox = document.getElementById('responseBox');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let selectedFile = null;
+    let input_document = ''; // store extracted text here
+    let lastServerResponse = null; // store parsed server response (data.response)
+
+    // Utility: set preview text
+    function showText(text){
+      preview.innerText = text || '(no text extracted)';
+      wordCountEl.innerText = text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+    }
+
+    // Read DOCX using Mammoth (plain text)
+    async function readDocx(file){
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      return result.value || '';
+    }
+
+    // Read PDF using pdfjs and aggregate page text
+    async function readPdf(file){
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8 = new Uint8Array(arrayBuffer);
+      const loadingTask = pdfjsLib.getDocument({ data: uint8 });
+      const pdf = await loadingTask.promise;
+      let text = '';
+      for (let i = 1; i <= pdf.numPages; i++){
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const strings = content.items.map(item => item.str || '');
+        text += strings.join(' ') + '\n\n';
+      }
+      return text;
+    }
+
+    async function extractText(file){
+      const name = (file.name || '').toLowerCase();
+      if (name.endsWith('.docx')) return await readDocx(file);
+      if (name.endsWith('.pdf')) return await readPdf(file);
+      throw new Error('Unsupported file type. Use .docx or .pdf');
+    }
+
+    async function handleFile(file, {autoAlert=false} = {}){
+      if (!file) return;
+      selectedFile = file;
+      fileInfo.innerText = file.name;
+      preview.innerHTML = '<div class="empty">Reading… please wait</div>';
+      try {
+        const text = await extractText(file);
+        input_document = text || '(no text extracted)'; // save into variable named `input_document`
+        // Print to console
+        console.groupCollapsed('Extracted document text — ' + file.name);
+        console.log(input_document);
+        console.groupEnd();
+        // show on page (limit very long previews to keep UI responsive)
+        const previewText = input_document.length > 200_000 ? input_document.slice(0,200_000) + "\n\n[Preview truncated]" : input_document;
+        showText(previewText);
+        if (autoAlert) alert('File read. Extracted text saved to variable `input_document`. Click Send to POST it to the server.');
+      } catch (err) {
+        console.error(err);
+        preview.innerHTML = '<div class="empty">Error: ' + err.message + '</div>';
+        if (autoAlert) alert('Error: ' + err.message);
+      }
+    }
+
+    // Send the extracted `input_document` to server and display response
+    async function sendDocument(){
+      if (!input_document){
+        alert('No extracted document text found. Please select a file first.');
+        return;
+      }
+
+      const url = 'http://113.106.164.42:8443/6013/question_answer'; // target endpoint
+      responseBox.innerHTML = '<div class="empty">Sending…</div>';
+      downloadBtn.disabled = true;
+
+      try {
+        const payload = { document: input_document };
+        // POST JSON
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        // HTTP-level error handling
+        if (!resp.ok) {
+          const text = await resp.text().catch(()=>'<no body>');
+          throw new Error('Server returned ' + resp.status + ' — ' + text);
+        }
+
+        // parse JSON
+        const data = await resp.json();
+        // Expecting { "response": response }
+        const serverResponse = data && (data.response ?? data.resp ?? data.result ?? data);
+        lastServerResponse = serverResponse;
+        // show nicely
+        const pretty = typeof serverResponse === 'string' ? serverResponse : JSON.stringify(serverResponse, null, 2);
+        responseBox.innerText = pretty;
+        downloadBtn.disabled = !pretty || pretty.trim() === '';
+        console.groupCollapsed('Server response');
+        console.log(data);
+        console.groupEnd();
+      } catch (err) {
+        console.error(err);
+        responseBox.innerHTML = '<div class="empty">Error: ' + err.message + '</div>';
+        downloadBtn.disabled = true;
+        alert('Error sending document: ' + err.message + '\n(See console for details)');
+      }
+    }
+
+    // Convert server response to a .docx and trigger download
+    async function downloadResponseAsDocx(){
+      // Ensure we have the docx library
+      if (!window.docx || !docx.Document) {
+        alert('docx library not available.');
+        return;
+      }
+      // Prepare content
+      let contentToWrite;
+      if (lastServerResponse === null || lastServerResponse === undefined) {
+        // fallback: try taking text from responseBox
+        contentToWrite = responseBox.innerText || '';
+      } else if (typeof lastServerResponse === 'string') {
+        contentToWrite = lastServerResponse;
+      } else {
+        // non-string -> stringify
+        try {
+          contentToWrite = JSON.stringify(lastServerResponse, null, 2);
+        } catch (e) {
+          contentToWrite = String(lastServerResponse);
+        }
+      }
+
+      if (!contentToWrite || contentToWrite.trim() === '') {
+        alert('No server response to download.');
+        return;
+      }
+
+      // Build docx document: split by lines into paragraphs
+      const { Document, Packer, Paragraph, TextRun } = docx;
+      const lines = String(contentToWrite).split(/\r?\n/);
+      const paragraphs = lines.map(line => {
+        // preserve empty lines as empty paragraphs
+        if (!line) return new Paragraph('');
+        // create a paragraph with a single text run
+        return new Paragraph({
+          children: [ new TextRun(String(line)) ]
+        });
+      });
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs
+          }
+        ]
+      });
+
+      // Generate and download
+      try {
+        const blob = await Packer.toBlob(doc);
+        const fileName = 'server_response.docx';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Error generating docx:', err);
+        alert('Failed to generate .docx: ' + err.message);
+      }
+    }
+
+    // Drag & drop handlers
+    ['dragenter','dragover'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{
+        e.preventDefault(); e.stopPropagation();
+        drop.classList.add('dragover');
+      });
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{
+        e.preventDefault(); e.stopPropagation();
+        drop.classList.remove('dragover');
+      });
+    });
+    drop.addEventListener('drop', e=>{
+      const dt = e.dataTransfer;
+      if (!dt || !dt.files || dt.files.length === 0) return;
+      const f = dt.files[0];
+      fileInput.files = dt.files; // keep input in sync
+      handleFile(f, {autoAlert:true});
+    });
+
+    // Click to open file picker
+    document.querySelector('label[for="fileInput"]').addEventListener('click', ()=>{
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      await handleFile(f, {autoAlert:true});
+    });
+
+    sendBtn.addEventListener('click', async ()=>{
+      await sendDocument();
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      selectedFile = null;
+      input_document = '';
+      lastServerResponse = null;
+      fileInput.value = '';
+      fileInfo.innerText = 'No file';
+      preview.innerHTML = '<div class="empty">No document loaded. Select or drop a file to extract text.</div>';
+      wordCountEl.innerText = 0;
+      responseBox.innerHTML = '<div class="empty">No response yet.</div>';
+      downloadBtn.disabled = true;
+      console.info('Cleared preview and response.');
+    });
+
+    downloadBtn.addEventListener('click', async ()=>{
+      await downloadResponseAsDocx();
+    });
+
+    // Keyboard accessibility: press Enter/Space when drop zone focused
+    drop.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    // Expose for debugging if dev wants to access the last extracted text
+    window.__docReader = {
+      get input_document(){ return input_document; },
+      get selectedFile(){ return selectedFile; },
+      get lastServerResponse(){ return lastServerResponse; }
+    };
+
+    // On load, show a friendly console message
+    console.log('Document Reader loaded — drop a .docx or .pdf, or click Browse. Extracted text is saved to the variable `input_document`. Click Send to POST it to the server. Download Response saves server response into a .docx file.');
+  </script>
+</body>
+</html>
